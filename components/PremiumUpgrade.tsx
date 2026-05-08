@@ -38,31 +38,31 @@ export default function PremiumUpgrade() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gradient-card backdrop-blur-sm border border-yellow-500/30 rounded-2xl overflow-hidden"
+      className="bg-gradient-card backdrop-blur-sm border border-gold-500/30 rounded-2xl overflow-hidden"
     >
-      <div className="bg-gradient-to-r from-yellow-500/10 to-purple-500/10 px-6 py-4 border-b border-yellow-500/20 flex items-center gap-3">
-        <Crown className="w-5 h-5 text-yellow-400" />
+      <div className="bg-gradient-to-r from-gold-50 to-teal-50 px-6 py-4 border-b border-gold-500/20 flex items-center gap-3">
+        <Crown className="w-5 h-5 text-gold-500" />
         <h3 className="text-lg font-semibold text-gradient-gold">
-          Plano Místico Pro
+          Plano Maná Pro
         </h3>
       </div>
 
       <div className="p-6">
         <div className="flex items-baseline gap-1 mb-4">
-          <span className="text-4xl font-bold text-white">R$ 9,90</span>
-          <span className="text-gray-400">/mês</span>
+          <span className="text-4xl font-bold text-text-primary">R$ 9,90</span>
+          <span className="text-text-secondary">/mês</span>
         </div>
 
         <ul className="space-y-3 mb-6">
           {[
-            'Interpretações ilimitadas',
-            'Análise astrológica profunda',
-            'Histórico completo de sonhos',
-            'Exportação em PDF místico',
-            'Prioridade no oráculo',
+            'Acolhimentos ilimitados',
+            'Versículos personalizados',
+            'Histórico completo de reflexões',
+            'Exportação de relatórios em PDF',
+            'Mensagem diária de Maná (WhatsApp)',
           ].map((feature) => (
-            <li key={feature} className="flex items-center gap-2 text-gray-300 text-sm">
-              <Check className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+            <li key={feature} className="flex items-center gap-2 text-text-primary text-sm">
+              <Check className="w-4 h-4 text-gold-500 flex-shrink-0" />
               {feature}
             </li>
           ))}
@@ -73,7 +73,7 @@ export default function PremiumUpgrade() {
           whileTap={{ scale: 0.98 }}
           onClick={handleUpgrade}
           disabled={loading}
-          className="w-full bg-gradient-to-r from-yellow-500 to-yellow-700 text-black font-semibold py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:from-yellow-400 hover:to-yellow-600"
+          className="w-full bg-gradient-to-r from-gold-400 to-gold-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:from-gold-500 hover:to-gold-500"
         >
           {loading ? (
             <Sparkles className="w-5 h-5 animate-spin" />

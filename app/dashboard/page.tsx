@@ -5,33 +5,33 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import Header from '@/components/Header';
-import DreamInput from '@/components/DreamInput';
-import InterpretationDisplay from '@/components/InterpretationDisplay';
+import SentimentInput from '@/components/SentimentInput';
+import AcolhimentoDisplay from '@/components/AcolhimentoDisplay';
 import QuickStats from '@/components/QuickStats';
 import PremiumUpgrade from '@/components/PremiumUpgrade';
-import { Sparkles, Moon } from 'lucide-react';
-import { interpretarEIlustrarSonho } from '@/app/actions/dream';
+import { Sparkles, BookOpen } from 'lucide-react';
+import { gerarAcolhimento } from '@/app/actions/acolhimento';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user, perfil, loading, signOut, refreshPerfil } = useAuth();
-  const [interpretacao, setInterpretacao] = useState<string | null>(null);
+  const [acolhimento, setAcolhimento] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [sonhoId, setSonhoId] = useState<string | null>(null);
-  const [interpretando, setInterpretando] = useState(false);
+  const [sentimentoId, setSentimentoId] = useState<string | null>(null);
+  const [acolhendo, setAcolhendo] = useState(false);
   const redirectedRef = useRef(false);
 
   useEffect(() => {
     if (redirectedRef.current) return;
-    
+
     if (loading) return;
-    
+
     if (!user) {
       redirectedRef.current = true;
       router.push('/auth');
       return;
     }
-    
+
     if (perfil && !perfil.onboarding_completed) {
       redirectedRef.current = true;
       router.push('/onboarding');
@@ -39,34 +39,33 @@ export default function DashboardPage() {
     }
   }, [loading, user, perfil, router]);
 
-  const handleInterpretar = useCallback(async (sonho: string, nome: string, signo: string, horario: string | null, tipo: string | null) => {
-    setInterpretando(true);
-    setInterpretacao(null);
+  const handleAcolher = useCallback(async (sentimento: string, nome: string, sentimentoTag: string | null, areaVida: string | null) => {
+    setAcolhendo(true);
+    setAcolhimento(null);
     setImageUrl(null);
 
     try {
       const formData = new FormData();
-      formData.append('sonho', sonho);
+      formData.append('sentimento', sentimento);
       formData.append('nome', nome);
-      formData.append('signo', signo);
-      if (horario) formData.append('horario', horario);
-      if (tipo) formData.append('tipo', tipo);
+      if (sentimentoTag) formData.append('sentimentoTag', sentimentoTag);
+      if (areaVida) formData.append('areaVida', areaVida);
 
-      const data = await interpretarEIlustrarSonho(formData);
+      const data = await gerarAcolhimento(formData);
 
       if (!data.success) {
-        throw new Error(data.error || 'Erro ao interpretar');
+        throw new Error(data.error || 'Erro ao buscar acolhimento');
       }
 
-      setInterpretacao(data.interpretacao!);
+      setAcolhimento(data.acolhimento!);
       setImageUrl(data.imageUrl || null);
-      setSonhoId(data.sonhoId || null);
+      setSentimentoId(data.sentimentoId || null);
       await refreshPerfil();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      alert(error.message || 'Erro ao consultar o oráculo. Tente novamente.');
+      alert(error.message || 'Erro ao buscar acolhimento. Tente novamente.');
     } finally {
-      setInterpretando(false);
+      setAcolhendo(false);
     }
   }, [refreshPerfil]);
 
@@ -78,9 +77,9 @@ export default function DashboardPage() {
             animate={{ rotate: 360 }}
             transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
           >
-            <Sparkles className="w-12 h-12 text-purple-400 animate-pulse mx-auto mb-4" />
+            <Sparkles className="w-12 h-12 text-teal-400 animate-pulse mx-auto mb-4" />
           </motion.div>
-          <p className="text-gray-400 animate-pulse">
+          <p className="text-text-secondary animate-pulse">
             Carregando...
           </p>
         </div>
@@ -111,9 +110,9 @@ export default function DashboardPage() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <DreamInput
+            <SentimentInput
               perfil={perfil}
-              onInterpretar={handleInterpretar}
+              onAcolher={handleAcolher}
             />
 
             {perfil.plano === 'gratis' && (
@@ -134,43 +133,42 @@ export default function DashboardPage() {
             transition={{ delay: 0.3 }}
           >
             <AnimatePresence mode="wait">
-              {interpretando ? (
+              {acolhendo ? (
                 <motion.div
                   key="loading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
+                  className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
                 >
                   <div className="text-center">
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                     >
-                      <Sparkles className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                      <Sparkles className="w-16 h-16 text-teal-400 mx-auto mb-4" />
                     </motion.div>
-                    <h3 className="text-xl font-semibold text-white mb-2">
-                      Analisando e Desenhando...
+                    <h3 className="text-xl font-semibold text-text-primary mb-2">
+                      Buscando Palavra para Você...
                     </h3>
-                    <p className="text-gray-400">
-                      O oráculo está interpretando e ilustrando seu sonho...
+                    <p className="text-text-secondary">
+                      O mentor espiritual está preparando seu acolhimento...
                     </p>
                   </div>
                 </motion.div>
-              ) : interpretacao ? (
+              ) : acolhimento ? (
                 <motion.div
                   key="result"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <InterpretationDisplay
-                    interpretacao={interpretacao}
+                  <AcolhimentoDisplay
+                    acolhimento={acolhimento}
                     imageUrl={imageUrl}
-                    sonhoId={sonhoId}
+                    sentimentoId={sentimentoId}
                     nome={perfil.nome}
-                    signo={perfil.signo || ''}
-                    onNovoSonho={() => { setInterpretacao(null); setImageUrl(null); setSonhoId(null); }}
+                    onNovoAcolhimento={() => { setAcolhimento(null); setImageUrl(null); setSentimentoId(null); }}
                   />
                 </motion.div>
               ) : (
@@ -178,15 +176,15 @@ export default function DashboardPage() {
                   key="empty"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
+                  className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
                 >
                   <div className="text-center">
-                    <Moon className="w-16 h-16 text-purple-400/50 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-300 mb-2">
-                      Seu Oráculo Pessoal
+                    <BookOpen className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-text-primary mb-2">
+                      Seu Acolhimento Diário
                     </h3>
-                    <p className="text-gray-400/70 max-w-xs mx-auto">
-                      Descreva seu sonho ao lado e receba uma interpretação mística personalizada.
+                    <p className="text-text-secondary max-w-xs mx-auto">
+                      Compartilhe como está se sentindo e receba uma palavra de conforto personalizada.
                     </p>
                   </div>
                 </motion.div>

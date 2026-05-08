@@ -6,48 +6,62 @@ import { motion } from 'framer-motion';
 import { createClient } from '@/lib/supabase/browser';
 import { useAuth } from '@/components/AuthProvider';
 import Header from '@/components/Header';
-import { Sonho } from '@/lib/types';
-import { History, Clock, Type, Eye, Moon, FileDown } from 'lucide-react';
+import { Sentimento } from '@/lib/types';
+import { History, Clock, Heart, BookOpen, FileDown } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const tipoLabels: Record<string, { label: string; color: string }> = {
-  pesadelo: { label: 'Pesadelo', color: 'bg-red-500/20 text-red-400 border-red-500/30' },
-  lucido: { label: 'Lúcido', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-  profetico: { label: 'Profético', color: 'bg-purple-500/20 text-purple-400 border-purple-500/30' },
-  comum: { label: 'Comum', color: 'bg-gray-500/20 text-gray-400 border-gray-500/30' },
+const sentimentoLabels: Record<string, { label: string; color: string }> = {
+  ansiedade: { label: 'Ansiedade', color: 'bg-orange-100 text-orange-600 border-orange-200' },
+  tristeza: { label: 'Tristeza', color: 'bg-blue-100 text-blue-600 border-blue-200' },
+  gratidao: { label: 'Gratidão', color: 'bg-green-100 text-green-600 border-green-200' },
+  medo: { label: 'Medo', color: 'bg-purple-100 text-purple-600 border-purple-200' },
+  esperanca: { label: 'Esperança', color: 'bg-yellow-100 text-yellow-600 border-yellow-200' },
+  cansaco: { label: 'Cansaço', color: 'bg-gray-100 text-gray-600 border-gray-200' },
+  paz: { label: 'Paz', color: 'bg-teal-100 text-teal-600 border-teal-200' },
+  raiva: { label: 'Raiva', color: 'bg-red-100 text-red-600 border-red-200' },
+  solidao: { label: 'Solidão', color: 'bg-indigo-100 text-indigo-600 border-indigo-200' },
+  alegria: { label: 'Alegria', color: 'bg-amber-100 text-amber-600 border-amber-200' },
+  confusao: { label: 'Confusão', color: 'bg-slate-100 text-slate-600 border-slate-200' },
+  culpa: { label: 'Culpa', color: 'bg-rose-100 text-rose-600 border-rose-200' },
+  amor: { label: 'Amor', color: 'bg-pink-100 text-pink-600 border-pink-200' },
 };
 
-const horarioLabels: Record<string, string> = {
-  noite: '🌙 Noite',
-  madrugada: '🌌 Madrugada',
-  cochilo: '☀️ Cochilo',
+const areaLabels: Record<string, string> = {
+  familia: '👨‍👩‍👧‍👦 Família',
+  trabalho: '💼 Trabalho',
+  saude: '🏥 Saúde',
+  relacionamento: '❤️ Relacionamento',
+  espiritualidade: '✝️ Espiritual',
+  financeiro: '💰 Financeiro',
+  pessoal: '🧘 Pessoal',
+  outro: '🌟 Outro',
 };
 
 export default function HistoricoPage() {
   const router = useRouter();
   const { user, perfil, signOut, loading } = useAuth();
-  const [sonhos, setSonhos] = useState<Sonho[]>([]);
-  const [loadingSonhos, setLoadingSonhos] = useState(true);
-  const [selectedSonho, setSelectedSonho] = useState<Sonho | null>(null);
+  const [sentimentos, setSentimentos] = useState<Sentimento[]>([]);
+  const [loadingSentimentos, setLoadingSentimentos] = useState(true);
+  const [selectedSentimento, setSelectedSentimento] = useState<Sentimento | null>(null);
   const hasRedirectedRef = useRef(false);
 
-  const fetchSonhos = useCallback(async () => {
+  const fetchSentimentos = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
     const { data } = await supabase
-      .from('sonhos')
+      .from('sentimentos')
       .select('*')
       .order('created_at', { ascending: false });
-    if (data) setSonhos(data);
-    setLoadingSonhos(false);
+    if (data) setSentimentos(data);
+    setLoadingSentimentos(false);
   }, [user]);
 
   useEffect(() => {
     if (user) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchSonhos();
+      fetchSentimentos();
     }
-  }, [user, fetchSonhos]);
+  }, [user, fetchSentimentos]);
 
   useEffect(() => {
     if (hasRedirectedRef.current) return;
@@ -57,7 +71,7 @@ export default function HistoricoPage() {
     }
   }, [loading, user, router]);
 
-  const handlePrintSonho = (sonho: Sonho) => {
+  const handlePrintSentimento = (sentimento: Sentimento) => {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
@@ -65,35 +79,34 @@ export default function HistoricoPage() {
 <!DOCTYPE html>
 <html>
 <head>
-<title>Interpretação - Sonnus AI</title>
+<title>Acolhimento - Mana AI</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; color: #1a1a2e; }
-  .header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #a875ff; margin-bottom: 30px; }
-  .logo { font-size: 24px; font-weight: 700; color: #7a1fff; }
-  .date { color: #666; font-size: 14px; margin-top: 5px; }
-  .sonho-box { background: #f5f5ff; padding: 20px; border-radius: 12px; margin: 20px 0; }
-  .sonho-label { font-size: 12px; color: #666; margin-bottom: 8px; }
-  .sonho-text { line-height: 1.6; color: #333; }
-  h2 { color: #7a1fff; font-size: 18px; margin: 24px 0 12px 0; }
-  p { line-height: 1.8; margin-bottom: 12px; color: #333; }
-  strong { color: #1a1a2e; }
+  body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; color: #1a2e33; background: #F9F7F2; }
+  .header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #2D5A61; margin-bottom: 30px; }
+  .logo { font-size: 24px; font-weight: 700; color: #2D5A61; }
+  .date { color: #5a7075; font-size: 14px; margin-top: 5px; }
+  .sentimento-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid rgba(45,90,97,0.1); }
+  .sentimento-label { font-size: 12px; color: #5a7075; margin-bottom: 8px; }
+  .sentimento-text { line-height: 1.6; color: #1a2e33; }
+  h2 { color: #2D5A61; font-size: 18px; margin: 24px 0 12px 0; }
+  p { line-height: 1.8; margin-bottom: 12px; color: #5a7075; }
+  strong { color: #1a2e33; }
   .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 12px; }
-  @media print { body { padding: 20px; } }
 </style>
 </head>
 <body>
   <div class="header">
-    <div class="logo">✦ Sonnus AI</div>
-    <div class="date">${formatDate(sonho.created_at)}</div>
+    <div class="logo">✦ Mana AI</div>
+    <div class="date">${formatDate(sentimento.created_at)}</div>
   </div>
-  <div class="sonho-box">
-    <div class="sonho-label">Seu sonho:</div>
-    <div class="sonho-text">${sonho.descricao}</div>
+  <div class="sentimento-box">
+    <div class="sentimento-label">Como você se sentia:</div>
+    <div class="sentimento-text">${sentimento.descricao}</div>
   </div>
-  <div class="content">${sonho.interpretacao || '<p>Sem interpretação disponível.</p>'}</div>
+  <div class="content">${sentimento.acolhimento || '<p>Sem acolhimento disponível.</p>'}</div>
   <div class="footer">
-    <p>Gerado por Sonnus AI • ${new Date().toLocaleDateString('pt-BR')}</p>
+    <p>Gerado por Mana AI • ${new Date().toLocaleDateString('pt-BR')}</p>
   </div>
   <script>window.print();</script>
 </body>
@@ -119,7 +132,7 @@ export default function HistoricoPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
         >
-          <Moon className="w-12 h-12 text-purple-400 animate-pulse" />
+          <BookOpen className="w-12 h-12 text-teal-400 animate-pulse" />
         </motion.div>
       </div>
     );
@@ -135,90 +148,90 @@ export default function HistoricoPage() {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 mb-8"
         >
-          <History className="w-7 h-7 text-purple-400" />
-          <h1 className="text-2xl font-bold text-white">Histórico de Sonhos</h1>
-          <span className="text-sm text-gray-400 bg-white/5 px-3 py-1 rounded-full">
-            {sonhos.length} {sonhos.length === 1 ? 'sonho' : 'sonhos'}
+          <History className="w-7 h-7 text-teal-500" />
+          <h1 className="text-2xl font-bold text-text-primary">Histórico de Acolhimentos</h1>
+          <span className="text-sm text-text-secondary bg-black/5 px-3 py-1 rounded-full">
+            {sentimentos.length} {sentimentos.length === 1 ? 'acolhimento' : 'acolhimentos'}
           </span>
         </motion.div>
 
-        {loadingSonhos ? (
+        {loadingSentimentos ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white/5 rounded-xl p-6 animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-3/4 mb-4" />
-                <div className="h-3 bg-white/10 rounded w-1/2" />
+              <div key={i} className="bg-black/5 rounded-xl p-6 animate-pulse">
+                <div className="h-4 bg-black/10 rounded w-3/4 mb-4" />
+                <div className="h-3 bg-black/10 rounded w-1/2" />
               </div>
             ))}
           </div>
-        ) : sonhos.length === 0 ? (
+        ) : sentimentos.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-12 text-center"
+            className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-12 text-center"
           >
-            <Moon className="w-16 h-16 text-purple-400/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
-              Nenhum sonho registrado
+            <BookOpen className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-text-primary mb-2">
+              Nenhum acolhimento registrado
             </h3>
-            <p className="text-gray-400">
-              Comece interpretando seus sonhos no Dashboard.
+            <p className="text-text-secondary">
+              Comece compartilhando seus sentimentos no Dashboard.
             </p>
           </motion.div>
         ) : (
-          <div className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl overflow-hidden">
+          <div className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-white/10">
-                    <th className="text-left px-6 py-4 text-sm text-gray-400 font-medium">Data</th>
-                    <th className="text-left px-6 py-4 text-sm text-gray-400 font-medium">Sonho</th>
-                    <th className="text-left px-6 py-4 text-sm text-gray-400 font-medium">Tipo</th>
-                    <th className="text-left px-6 py-4 text-sm text-gray-400 font-medium">Horário</th>
-                    <th className="text-left px-6 py-4 text-sm text-gray-400 font-medium">Ações</th>
+                  <tr className="border-b border-border-soft">
+                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Data</th>
+                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Sentimento</th>
+                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Sentimento</th>
+                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Área</th>
+                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {sonhos.map((sonho, index) => (
+                  {sentimentos.map((sentimento, index) => (
                     <motion.tr
-                      key={sonho.id}
+                      key={sentimento.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                      className="border-b border-border-soft/50 hover:bg-black/5 transition-colors"
                     >
                       <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-400">
+                        <div className="flex items-center gap-2 text-text-secondary">
                           <Clock className="w-4 h-4" />
-                          <span className="text-sm">{formatDate(sonho.created_at)}</span>
+                          <span className="text-sm">{formatDate(sentimento.created_at)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-white text-sm truncate max-w-[200px]">
-                          {sonho.descricao.substring(0, 60)}...
+                        <p className="text-text-primary text-sm truncate max-w-[200px]">
+                          {sentimento.descricao.substring(0, 60)}...
                         </p>
                       </td>
                       <td className="px-6 py-4">
-                        {sonho.tipo && tipoLabels[sonho.tipo] ? (
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${tipoLabels[sonho.tipo].color}`}>
-                            <Type className="w-3 h-3 mr-1" />
-                            {tipoLabels[sonho.tipo].label}
+                        {sentimento.sentimento && sentimentoLabels[sentimento.sentimento] ? (
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${sentimentoLabels[sentimento.sentimento].color}`}>
+                            <Heart className="w-3 h-3 mr-1" />
+                            {sentimentoLabels[sentimento.sentimento].label}
                           </span>
                         ) : (
-                          <span className="text-gray-500 text-sm">-</span>
+                          <span className="text-text-secondary text-sm">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="text-sm text-gray-400">
-                          {sonho.horario ? horarioLabels[sonho.horario] : '-'}
+                        <span className="text-sm text-text-secondary">
+                          {sentimento.area_vida ? areaLabels[sentimento.area_vida] : '-'}
                         </span>
                       </td>
                       <td className="px-6 py-4">
                         <button
-                          onClick={() => setSelectedSonho(sonho)}
-                          className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+                          onClick={() => setSelectedSentimento(sentimento)}
+                          className="flex items-center gap-2 text-teal-500 hover:text-teal-600 transition-colors"
                         >
-                          <Eye className="w-4 h-4" />
+                          <BookOpen className="w-4 h-4" />
                           <span className="text-sm">Ver</span>
                         </button>
                       </td>
@@ -230,39 +243,39 @@ export default function HistoricoPage() {
           </div>
         )}
 
-        {selectedSonho && (
+        {selectedSentimento && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setSelectedSonho(null)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+            onClick={() => setSelectedSentimento(null)}
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+              className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="bg-purple-900/30 px-6 py-4 border-b border-purple-500/20 flex items-center justify-between">
+              <div className="bg-teal-50 px-6 py-4 border-b border-border-soft flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
-                    Interpretação do Sonho
+                  <h3 className="text-lg font-semibold text-text-primary">
+                    Acolhimento
                   </h3>
-                  <p className="text-xs text-gray-400">
-                    {formatDate(selectedSonho.created_at)}
+                  <p className="text-xs text-text-secondary">
+                    {formatDate(selectedSentimento.created_at)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handlePrintSonho(selectedSonho)}
-                    className="p-2 rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
+                    onClick={() => handlePrintSentimento(selectedSentimento)}
+                    className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary"
                     title="Imprimir / PDF"
                   >
                     <FileDown className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => setSelectedSonho(null)}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    onClick={() => setSelectedSentimento(null)}
+                    className="text-text-secondary hover:text-text-primary transition-colors"
                   >
                     ✕
                   </button>
@@ -270,26 +283,37 @@ export default function HistoricoPage() {
               </div>
 
               <div className="p-6 overflow-y-auto max-h-[60vh]">
-                <div className="mb-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-sm text-gray-400 mb-1">Seu sonho:</p>
-                  <p className="text-white">{selectedSonho.descricao}</p>
+                {selectedSentimento.image_url && (
+                  <div className="mb-4 rounded-xl overflow-hidden">
+                    <img
+                      src={selectedSentimento.image_url}
+                      alt="Arte Sacra"
+                      className="w-full object-cover"
+                      style={{ aspectRatio: '4/5', maxHeight: '320px' }}
+                      loading="lazy"
+                    />
+                  </div>
+                )}
+                <div className="mb-4 p-4 bg-black/5 rounded-xl border border-border-soft">
+                  <p className="text-sm text-text-secondary mb-1">Como você se sentia:</p>
+                  <p className="text-text-primary">{selectedSentimento.descricao}</p>
                 </div>
 
                 <div className="flex gap-2 mb-4">
-                  {selectedSonho.tipo && tipoLabels[selectedSonho.tipo] && (
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${tipoLabels[selectedSonho.tipo].color}`}>
-                      {tipoLabels[selectedSonho.tipo].label}
+                  {selectedSentimento.sentimento && sentimentoLabels[selectedSentimento.sentimento] && (
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${sentimentoLabels[selectedSentimento.sentimento].color}`}>
+                      {sentimentoLabels[selectedSentimento.sentimento].label}
                     </span>
                   )}
-                  {selectedSonho.horario && horarioLabels[selectedSonho.horario] && (
-                    <span className="bg-white/5 text-gray-400 px-3 py-1 rounded-full text-xs border border-white/10">
-                      {horarioLabels[selectedSonho.horario]}
+                  {selectedSentimento.area_vida && areaLabels[selectedSentimento.area_vida] && (
+                    <span className="bg-black/5 text-text-secondary px-3 py-1 rounded-full text-xs border border-border-soft">
+                      {areaLabels[selectedSentimento.area_vida]}
                     </span>
                   )}
                 </div>
 
                 <div className="markdown-content">
-                  <ReactMarkdown>{selectedSonho.interpretacao || 'Interpretação não disponível.'}</ReactMarkdown>
+                  <ReactMarkdown>{selectedSentimento.acolhimento || 'Acolhimento não disponível.'}</ReactMarkdown>
                 </div>
               </div>
             </motion.div>

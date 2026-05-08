@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Moon, Crown, Sparkles, History } from 'lucide-react';
+import { BookOpen, Crown, Heart, History } from 'lucide-react';
 import { Perfil } from '@/lib/types';
 import Link from 'next/link';
 
@@ -12,28 +12,28 @@ interface QuickStatsProps {
 export default function QuickStats({ perfil }: QuickStatsProps) {
   const stats = [
     {
-      icon: perfil.plano === 'pro' ? Crown : Sparkles,
+      icon: perfil.plano === 'pro' ? Crown : Heart,
       label: perfil.plano === 'pro' ? 'Plano Pro' : 'Plano Gratuito',
       value: perfil.plano === 'pro' ? 'Ilimitado' : `${perfil.creditos} créditos`,
-      color: perfil.plano === 'pro' ? 'text-yellow-400' : 'text-purple-400',
-      bgColor: perfil.plano === 'pro' ? 'bg-yellow-500/10' : 'bg-purple-500/10',
+      color: perfil.plano === 'pro' ? 'text-gold-500' : 'text-teal-500',
+      bgColor: perfil.plano === 'pro' ? 'bg-gold-50' : 'bg-teal-50',
       link: null,
     },
     {
-      icon: Moon,
-      label: 'Seu Signo',
-      value: perfil.signo ? capitalizeFirst(perfil.signo) : 'Não definido',
-      color: 'text-indigo-400',
-      bgColor: 'bg-indigo-500/10',
-      link: '/configuracoes',
+      icon: BookOpen,
+      label: 'Acolhimentos',
+      value: 'Ver histórico →',
+      color: 'text-teal-500',
+      bgColor: 'bg-teal-50',
+      link: '/historico',
     },
     {
-      icon: History,
-      label: 'Interpretações',
-      value: 'Ver histórico →',
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-      link: '/historico',
+      icon: Heart,
+      label: 'Reflexões',
+      value: 'Explorar →',
+      color: 'text-sage-500',
+      bgColor: 'bg-sage-50',
+      link: '/insights',
     },
   ];
 
@@ -46,14 +46,14 @@ export default function QuickStats({ perfil }: QuickStatsProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className={`${stat.bgColor} backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center gap-4 ${stat.link ? 'cursor-pointer hover:border-purple-500/30 transition-colors' : ''}`}
+            className={`${stat.bgColor} backdrop-blur-sm border border-border-soft rounded-xl p-4 flex items-center gap-4 ${stat.link ? 'cursor-pointer hover:border-teal-500/30 transition-colors' : ''}`}
           >
-            <div className="p-2 rounded-lg bg-white/5">
+            <div className="p-2 rounded-lg bg-white/60">
               <Icon className={`w-5 h-5 ${stat.color}`} />
             </div>
             <div>
-              <p className="text-xs text-gray-400">{stat.label}</p>
-              <p className={`text-lg font-semibold text-white ${stat.link ? 'hover:text-purple-300 transition-colors' : ''}`}>{stat.value}</p>
+              <p className="text-xs text-text-secondary">{stat.label}</p>
+              <p className={`text-lg font-semibold text-text-primary ${stat.link ? 'hover:text-teal-600 transition-colors' : ''}`}>{stat.value}</p>
             </div>
           </motion.div>
         );
@@ -70,8 +70,4 @@ export default function QuickStats({ perfil }: QuickStatsProps) {
       })}
     </div>
   );
-}
-
-function capitalizeFirst(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 }

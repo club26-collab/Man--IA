@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: 'brl',
             product_data: {
-              name: 'Plano Místico Pro - Sonnus AI',
-              description: 'Interpretações ilimitadas de sonhos com IA ancestral',
+              name: 'Plano Maná Pro',
+              description: 'Acolhimentos ilimitados com IA baseada na Bíblia',
             },
             unit_amount: 990,
             recurring: {

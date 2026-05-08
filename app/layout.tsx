@@ -6,8 +6,8 @@ import { AuthProvider } from '@/components/AuthProvider';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Sonnus AI - Oráculo dos Sonhos',
-  description: 'Desvende os mistérios dos seus sonhos com inteligência artificial ancestral.',
+  title: 'Maná AI — Acolhimento Espiritual Diário',
+  description: 'Receba conforto, versículos e orientação bíblica personalizada com inteligência artificial.',
 };
 
 export default function RootLayout({
@@ -17,7 +17,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className={`${inter.className} bg-bg-dark min-h-screen stars-bg`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-bg-primary min-h-screen warm-bg`} suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

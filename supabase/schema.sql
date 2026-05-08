@@ -1,5 +1,5 @@
 -- =====================================================
--- SONNUS AI - Supabase Database Schema + TRIGGERS
+-- MANÁ AI - Supabase Database Schema + TRIGGERS
 -- =====================================================
 
 -- Enable UUID extension
@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS public.perfis (
   id UUID PRIMARY KEY,
   email TEXT NOT NULL,
   nome TEXT NOT NULL DEFAULT '',
-  signo TEXT,
   plano TEXT NOT NULL DEFAULT 'gratis',
   creditos INTEGER NOT NULL DEFAULT 3,
   onboarding_completed BOOLEAN NOT NULL DEFAULT false,
@@ -39,34 +38,60 @@ CREATE POLICY "Usuários podem inserir seu próprio perfil"
   WITH CHECK (auth.uid() = id);
 
 -- =====================================================
--- TABLE: sonhos (dream records)
+-- TABLE: sentimentos (user feelings/check-ins)
 -- =====================================================
-CREATE TABLE IF NOT EXISTS public.sonhos (
+CREATE TABLE IF NOT EXISTS public.sentimentos (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES public.perfis(id) ON DELETE CASCADE,
   descricao TEXT NOT NULL,
-  horario TEXT,
-  tipo TEXT,
-  interpretacao TEXT,
+  sentimento TEXT,
+  area_vida TEXT,
+  acolhimento TEXT,
+  versiculo TEXT,
+  image_url TEXT,
+  image_prompt TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE public.sonhos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.sentimentos ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "Usuários podem ver seus próprios sonhos" ON public.sonhos;
-DROP POLICY IF EXISTS "Usuários podem inserir seus próprios sonhos" ON public.sonhos;
-DROP POLICY IF EXISTS "Usuários podem atualizar seus próprios sonhos" ON public.sonhos;
+DROP POLICY IF EXISTS "Usuários podem ver seus próprios sentimentos" ON public.sentimentos;
+DROP POLICY IF EXISTS "Usuários podem inserir seus próprios sentimentos" ON public.sentimentos;
+DROP POLICY IF EXISTS "Usuários podem atualizar seus próprios sentimentos" ON public.sentimentos;
 
-CREATE POLICY "Usuários podem ver seus próprios sonhos"
-  ON public.sonhos FOR SELECT
+CREATE POLICY "Usuários podem ver seus próprios sentimentos"
+  ON public.sentimentos FOR SELECT
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Usuários podem inserir seus próprios sonhos"
-  ON public.sonhos FOR INSERT
+CREATE POLICY "Usuários podem inserir seus próprios sentimentos"
+  ON public.sentimentos FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Usuários podem atualizar seus próprios sonhos"
-  ON public.sonhos FOR UPDATE
+CREATE POLICY "Usuários podem atualizar seus próprios sentimentos"
+  ON public.sentimentos FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- =====================================================
+-- TABLE: mensagens_diarias (daily mana messages via cron)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS public.mensagens_diarias (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES public.perfis(id) ON DELETE CASCADE,
+  versiculo TEXT NOT NULL,
+  mensagem TEXT NOT NULL,
+  oracao TEXT,
+  data_envio DATE NOT NULL DEFAULT CURRENT_DATE,
+  canal TEXT NOT NULL DEFAULT 'app',
+  status TEXT NOT NULL DEFAULT 'pendente',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.mensagens_diarias ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Usuários podem ver suas próprias mensagens" ON public.mensagens_diarias;
+
+CREATE POLICY "Usuários podem ver suas próprias mensagens"
+  ON public.mensagens_diarias FOR SELECT
   USING (auth.uid() = user_id);
 
 -- =====================================================
@@ -104,12 +129,11 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  INSERT INTO public.perfis (id, email, nome, signo, plano, creditos, onboarding_completed)
+  INSERT INTO public.perfis (id, email, nome, plano, creditos, onboarding_completed)
   VALUES (
     NEW.id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'nome', ''),
-    NULL,
     'gratis',
     3,
     false

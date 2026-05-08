@@ -11,7 +11,7 @@ const supabaseAdmin = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABA
 
 const client = process.env.GEMINI_API_KEY ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }) : null;
 
-export async function gerarProjecaoSubconsciente() {
+export async function gerarReflexaoPersonalizada() {
   try {
     const supabase = await createServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -35,22 +35,21 @@ export async function gerarProjecaoSubconsciente() {
     }
 
     if (perfil.plano === 'gratis' && perfil.creditos <= 0) {
-      return { success: false, error: 'Créditos esgotados. Faça upgrade para gerar sua projeção!' };
+      return { success: false, error: 'Créditos esgotados. Faça upgrade para gerar sua reflexão!' };
     }
 
-    // Busca os últimos 15 sonhos
-    const { data: sonhos } = await supabaseAdmin
-      .from('sonhos')
-      .select('descricao, created_at')
+    const { data: sentimentos } = await supabaseAdmin
+      .from('sentimentos')
+      .select('descricao, sentimento, area_vida, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(15);
 
-    if (!sonhos || sonhos.length < 3) {
-      return { 
-        success: false, 
-        error: 'not_enough_data', 
-        message: 'Para uma projeção precisa, precisamos de padrões. Registre pelo menos 3 sonhos primeiro.' 
+    if (!sentimentos || sentimentos.length < 3) {
+      return {
+        success: false,
+        error: 'not_enough_data',
+        message: 'Para uma reflexão profunda, precisamos de mais dados. Registre pelo menos 3 acolhimentos primeiro.'
       };
     }
 
@@ -58,26 +57,28 @@ export async function gerarProjecaoSubconsciente() {
       return { success: false, error: 'Configuração da IA incompleta no servidor.' };
     }
 
-    const sonhosFormatados = sonhos.map((s, i) => `Sonho ${i + 1} (${new Date(s.created_at).toLocaleDateString()}): ${s.descricao}`).join('\n\n');
+    const sentimentosFormatados = sentimentos.map((s, i) =>
+      `Registro ${i + 1} (${new Date(s.created_at).toLocaleDateString()}): "${s.descricao}" [Sentimento: ${s.sentimento || 'N/I'} | Área: ${s.area_vida || 'N/I'}]`
+    ).join('\n\n');
 
-    const promptText = `Atue como um analista místico e psicólogo junguiano. 
-Você está analisando os últimos sonhos de ${perfil.nome}. 
-Leia-os atentamente e encontre os padrões ocultos.
+    const promptText = `Atue como um conselheiro pastoral e mentor de bem-estar emocional baseado na sabedoria bíblica.
+Você está analisando o histórico emocional de ${perfil.nome}.
+Leia atentamente e encontre padrões espirituais e emocionais.
 
-SONHOS:
-${sonhosFormatados}
+REGISTROS:
+${sentimentosFormatados}
 
 Retorne um JSON ESTRITAMENTE com a seguinte estrutura:
 {
   "temasPrincipais": [
-    { "nome": "Ex: Fuga/Ansiedade", "quantidade": 5 },
-    { "nome": "Ex: Água/Renascimento", "quantidade": 3 }
+    { "nome": "Ex: Ansiedade/Falta de Paz", "quantidade": 5 },
+    { "nome": "Ex: Busca por Propósito", "quantidade": 3 }
   ],
-  "analiseGeral": "Um parágrafo místico mas direto explicando a fase mental que a pessoa está passando baseado no acúmulo desses sonhos.",
-  "sintomasInfluenciadores": ["Lista de 3 a 4 possíveis sintomas ou gatilhos da vida real que estão causando esses sonhos (ex: Estresse financeiro, Esgotamento)."],
-  "dicasSaudeSono": ["Lista de 3 a 4 dicas práticas/esotéricas para melhorar a higiene do sono (ex: Meditar 5 min, Evitar telas)."]
+  "analiseGeral": "Um parágrafo acolhedor e encorajador explicando a fase espiritual e emocional que a pessoa está passando.",
+  "gatilhosInfluenciadores": ["Lista de 3 a 4 possíveis gatilhos ou causas emocionais identificadas nos registros."],
+  "dicasEspirituais": ["Lista de 3 a 4 práticas espirituais ou hábitos saudáveis para fortalecer a fé e o bem-estar (ex: Leitura de Salmos, Oração matinal, Gratidão diária)."]
 }
-IMPORTANTE: "temasPrincipais" deve ter no máximo 5 itens. A "quantidade" deve refletir o "peso" daquele tema nas repetições (de 1 a 10). O texto de analiseGeral deve ser cativante.`;
+IMPORTANTE: "temasPrincipais" deve ter no máximo 5 itens. A "quantidade" deve refletir o "peso" daquele tema nos registros (de 1 a 10). O texto de analiseGeral deve ser acolhedor e bíblico.`;
 
     const response = await client.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -92,7 +93,6 @@ IMPORTANTE: "temasPrincipais" deve ter no máximo 5 itens. A "quantidade" deve r
 
     const resultData = JSON.parse(jsonText);
 
-    // Desconto de crédito (1 por análise pesada)
     if (perfil.plano === 'gratis') {
       await supabaseAdmin
         .from('perfis')
@@ -103,13 +103,12 @@ IMPORTANTE: "temasPrincipais" deve ter no máximo 5 itens. A "quantidade" deve r
     return { success: true, data: resultData };
 
   } catch (error: any) {
-    console.error('Erro ao gerar projeção:', error);
-    
-    // Tratamento específico para erro 429 (Rate Limit do Gemini Free Tier)
+    console.error('Erro ao gerar reflexão:', error);
+
     if (error.message?.includes('429') || error.status === 429) {
-      return { success: false, error: 'O Oráculo está sobrecarregado no momento (Limite da API do Google). Por favor, aguarde cerca de 1 minuto e tente novamente.' };
+      return { success: false, error: 'O serviço está sobrecarregado no momento. Por favor, aguarde cerca de 1 minuto e tente novamente.' };
     }
-    
-    return { success: false, error: 'Erro interno ao consultar os padrões do subconsciente.' };
+
+    return { success: false, error: 'Erro interno ao gerar reflexão personalizada.' };
   }
 }

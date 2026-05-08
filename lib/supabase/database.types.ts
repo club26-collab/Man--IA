@@ -14,7 +14,6 @@ export type Database = {
           id: string
           email: string
           nome: string
-          signo: string | null
           plano: 'gratis' | 'pro'
           creditos: number
           onboarding_completed: boolean
@@ -25,7 +24,6 @@ export type Database = {
           id?: string
           email: string
           nome: string
-          signo?: string | null
           plano?: 'gratis' | 'pro'
           creditos?: number
           onboarding_completed?: boolean
@@ -36,7 +34,6 @@ export type Database = {
           id?: string
           email?: string
           nome?: string
-          signo?: string | null
           plano?: 'gratis' | 'pro'
           creditos?: number
           onboarding_completed?: boolean
@@ -44,32 +41,76 @@ export type Database = {
           updated_at?: string
         }
       }
-      sonhos: {
+      sentimentos: {
         Row: {
           id: string
           user_id: string
           descricao: string
-          horario: string | null
-          tipo: string | null
-          interpretacao: string | null
+          sentimento: string | null
+          area_vida: string | null
+          acolhimento: string | null
+          versiculo: string | null
+          image_url: string | null
+          image_prompt: string | null
           created_at: string
         }
         Insert: {
           id?: string
           user_id: string
           descricao: string
-          horario?: string | null
-          tipo?: string | null
-          interpretacao?: string | null
+          sentimento?: string | null
+          area_vida?: string | null
+          acolhimento?: string | null
+          versiculo?: string | null
+          image_url?: string | null
+          image_prompt?: string | null
           created_at?: string
         }
         Update: {
           id?: string
           user_id?: string
           descricao?: string
-          horario?: string | null
-          tipo?: string | null
-          interpretacao?: string | null
+          sentimento?: string | null
+          area_vida?: string | null
+          acolhimento?: string | null
+          versiculo?: string | null
+          image_url?: string | null
+          image_prompt?: string | null
+          created_at?: string
+        }
+      }
+      mensagens_diarias: {
+        Row: {
+          id: string
+          user_id: string
+          versiculo: string
+          mensagem: string
+          oracao: string | null
+          data_envio: string
+          canal: string
+          status: 'pendente' | 'enviado' | 'falhou'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          versiculo: string
+          mensagem: string
+          oracao?: string | null
+          data_envio?: string
+          canal?: string
+          status?: 'pendente' | 'enviado' | 'falhou'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          versiculo?: string
+          mensagem?: string
+          oracao?: string | null
+          data_envio?: string
+          canal?: string
+          status?: 'pendente' | 'enviado' | 'falhou'
           created_at?: string
         }
       }

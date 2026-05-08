@@ -6,8 +6,8 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/components/AuthProvider';
 import Header from '@/components/Header';
 import PremiumUpgrade from '@/components/PremiumUpgrade';
-import { Sparkles, LineChart, Brain, HeartPulse, Moon } from 'lucide-react';
-import { gerarProjecaoSubconsciente } from '@/app/actions/insights';
+import { Sparkles, LineChart, BookOpen, Heart, BookMarked } from 'lucide-react';
+import { gerarReflexaoPersonalizada } from '@/app/actions/insights';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 export default function InsightsPage() {
@@ -33,18 +33,18 @@ export default function InsightsPage() {
     }
   }, [loading, user, perfil, router]);
 
-  const handleGerarProjecao = async () => {
+  const handleGerarReflexao = async () => {
     setAnalisando(true);
     setErrorMsg(null);
     setResultado(null);
 
     try {
-      const res = await gerarProjecaoSubconsciente();
-      
+      const res = await gerarReflexaoPersonalizada();
+
       if (!res.success) {
-        throw new Error(res.message || res.error || 'Erro ao gerar projeção.');
+        throw new Error(res.message || res.error || 'Erro ao gerar reflexão.');
       }
-      
+
       setResultado(res.data);
       await refreshPerfil();
     } catch (err: any) {
@@ -57,12 +57,12 @@ export default function InsightsPage() {
   if (loading || !user || !perfil) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Sparkles className="w-12 h-12 text-purple-400 animate-pulse" />
+        <Sparkles className="w-12 h-12 text-teal-400 animate-pulse" />
       </div>
     );
   }
 
-  const colors = ['#a875ff', '#8b3dff', '#6d28d9', '#4c1d95', '#2e1065'];
+  const colors = ['#2D5A61', '#4da3af', '#7bbfc8', '#B2C2B1', '#d4b42a'];
 
   return (
     <div className="min-h-screen">
@@ -70,36 +70,36 @@ export default function InsightsPage() {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
-          <LineChart className="w-8 h-8 text-purple-400" />
-          <h1 className="text-3xl font-bold text-white">Minha Projeção</h1>
+          <LineChart className="w-8 h-8 text-teal-500" />
+          <h1 className="text-3xl font-bold text-text-primary">Minhas Reflexões</h1>
         </div>
 
         {!resultado && !analisando && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-8 text-center"
+            className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 text-center"
           >
-            <Brain className="w-16 h-16 text-purple-400/50 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-white mb-4">Mapeie seu Subconsciente</h2>
-            <p className="text-gray-400 mb-8 max-w-lg mx-auto">
-              Nossa IA analisa o histórico dos seus sonhos para identificar padrões repetitivos, emoções ocultas e como a sua vida desperta está influenciando suas noites.
+            <BookMarked className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Descubra Padrões da Sua Jornada</h2>
+            <p className="text-text-secondary mb-8 max-w-lg mx-auto">
+              Nossa IA analisa seu histórico de acolhimentos para identificar padrões emocionais e espirituais, revelando como sua vida desperta está influenciando sua caminhada com Deus.
             </p>
-            
+
             {perfil.plano === 'gratis' && perfil.creditos <= 0 ? (
               <PremiumUpgrade />
             ) : (
               <button
-                onClick={handleGerarProjecao}
-                className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold py-3 px-8 rounded-xl shadow-[0_0_30px_rgba(168,85,247,0.3)] hover:shadow-[0_0_50px_rgba(168,85,247,0.5)] transition-all flex items-center justify-center gap-2 mx-auto"
+                onClick={handleGerarReflexao}
+                className="bg-gradient-to-r from-teal-500 to-teal-600 text-white font-semibold py-3 px-8 rounded-xl glow-teal hover:shadow-lg transition-all flex items-center justify-center gap-2 mx-auto"
               >
                 <Sparkles className="w-5 h-5" />
-                Gerar Projeção (Custa 1 crédito)
+                Gerar Reflexão (Custa 1 crédito)
               </button>
             )}
-            
+
             {errorMsg && (
-              <div className="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm max-w-md mx-auto">
+              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm max-w-md mx-auto">
                 {errorMsg}
               </div>
             )}
@@ -110,13 +110,13 @@ export default function InsightsPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-12 text-center"
+            className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-12 text-center"
           >
             <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}>
-              <LineChart className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+              <LineChart className="w-16 h-16 text-teal-400 mx-auto mb-4" />
             </motion.div>
-            <h3 className="text-xl font-semibold text-white mb-2">Lendo as Entrelinhas...</h3>
-            <p className="text-gray-400">Vasculhando seu histórico de sonhos em busca de padrões.</p>
+            <h3 className="text-xl font-semibold text-text-primary mb-2">Analisando sua Jornada...</h3>
+            <p className="text-text-secondary">Vasculhando seu histórico em busca de padrões emocionais e espirituais.</p>
           </motion.div>
         )}
 
@@ -126,19 +126,18 @@ export default function InsightsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {/* Gráfico */}
-            <div className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-purple-400" /> Temas Recorrentes
+            <div className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-6">
+              <h3 className="text-xl font-semibold text-text-primary mb-6 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-teal-500" /> Temas Recorrentes
               </h3>
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={resultado.temasPrincipais} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-                    <XAxis dataKey="nome" stroke="#a0a0c0" fontSize={12} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="nome" stroke="#5a7075" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis hide />
-                    <Tooltip 
-                      cursor={{ fill: 'rgba(168, 85, 247, 0.1)' }}
-                      contentStyle={{ backgroundColor: '#0a0a1a', border: '1px solid rgba(139,61,255,0.3)', borderRadius: '12px', color: '#fff' }}
+                    <Tooltip
+                      cursor={{ fill: 'rgba(45, 90, 97, 0.1)' }}
+                      contentStyle={{ backgroundColor: '#F9F7F2', border: '1px solid rgba(45,90,97,0.2)', borderRadius: '12px', color: '#1a2e33' }}
                     />
                     <Bar dataKey="quantidade" radius={[6, 6, 0, 0]} maxBarSize={60}>
                       {resultado.temasPrincipais.map((entry: any, index: number) => (
@@ -150,58 +149,55 @@ export default function InsightsPage() {
               </div>
             </div>
 
-            {/* Análise Geral */}
-            <div className="bg-gradient-card backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">Análise Profunda</h3>
-              <p className="text-gray-300 leading-relaxed">
+            <div className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-6">
+              <h3 className="text-xl font-semibold text-text-primary mb-4">Análise Profunda</h3>
+              <p className="text-text-primary leading-relaxed">
                 {resultado.analiseGeral}
               </p>
             </div>
 
-            {/* Sintomas e Dicas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-purple-900/10 border border-purple-500/20 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <HeartPulse className="w-5 h-5 text-red-400" /> Possíveis Gatilhos
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-red-500" /> Possíveis Gatilhos
                 </h3>
                 <ul className="space-y-3">
-                  {resultado.sintomasInfluenciadores.map((sintoma: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                      <span className="text-red-400 mt-0.5">•</span> {sintoma}
+                  {resultado.gatilhosInfluenciadores.map((gatilho: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-text-primary text-sm">
+                      <span className="text-red-400 mt-0.5">•</span> {gatilho}
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-indigo-900/10 border border-indigo-500/20 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                  <Moon className="w-5 h-5 text-indigo-400" /> Dicas de Higiene do Sono
+              <div className="bg-teal-50 border border-teal-200 rounded-2xl p-6">
+                <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+                  <BookMarked className="w-5 h-5 text-teal-500" /> Práticas Espirituais
                 </h3>
                 <ul className="space-y-3">
-                  {resultado.dicasSaudeSono.map((dica: string, i: number) => (
-                    <li key={i} className="flex items-start gap-2 text-gray-300 text-sm">
-                      <span className="text-indigo-400 mt-0.5">✨</span> {dica}
+                  {resultado.dicasEspirituais.map((dica: string, i: number) => (
+                    <li key={i} className="flex items-start gap-2 text-text-primary text-sm">
+                      <span className="text-teal-500 mt-0.5">✦</span> {dica}
                     </li>
                   ))}
                 </ul>
               </div>
             </div>
 
-            {/* Aviso Legal */}
-            <div className="px-6 py-4 bg-white/5 rounded-xl border border-white/10 text-center">
-              <p className="text-[10px] text-gray-500 leading-relaxed">
-                Aviso: Os insights gerados pela inteligência artificial têm caráter de autoconhecimento e bem-estar, 
-                e não substituem o diagnóstico de um profissional de saúde, psicólogo ou médico do sono.
+            <div className="px-6 py-4 bg-black/5 rounded-xl border border-border-soft text-center">
+              <p className="text-[10px] text-text-secondary leading-relaxed">
+                Aviso: Os insights gerados pela inteligência artificial têm caráter de autoconhecimento e bem-estar espiritual,
+                e não substituem o acompanhamento pastoral, psicológico ou médico.
               </p>
             </div>
-            
+
             <div className="flex justify-center pt-4">
               <button
-                onClick={handleGerarProjecao}
-                className="text-purple-400 hover:text-white transition-colors text-sm flex items-center gap-2"
+                onClick={handleGerarReflexao}
+                className="text-teal-500 hover:text-teal-600 transition-colors text-sm flex items-center gap-2"
               >
                 <LineChart className="w-4 h-4" />
-                Gerar Nova Projeção (1 crédito)
+                Gerar Nova Reflexão (1 crédito)
               </button>
             </div>
           </motion.div>

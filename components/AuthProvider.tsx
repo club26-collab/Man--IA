@@ -28,42 +28,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const perfilFetchedRef = useRef<string | null>(null);
   const isInitialLoadDone = useRef(false);
 
+  const isSupabaseConfigured = !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
   const fetchPerfil = useCallback(async (userId: string, userEmail: string) => {
+    if (!isSupabaseConfigured) return;
     if (perfilFetchedRef.current === userId) return;
     perfilFetchedRef.current = userId;
 
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from('perfis')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
-    if (data) {
-      setPerfil(data);
-    } else if (error?.code === 'PGRST116') {
+    try {
       const supabase = createClient();
-      const { data: criado } = await supabase
+      const { data, error } = await supabase
         .from('perfis')
-        .upsert({
-          id: userId,
-          email: userEmail,
-          nome: '',
-          plano: 'gratis',
-          creditos: 3,
-          onboarding_completed: false,
-        }, { onConflict: 'id' })
-        .select()
+        .select('*')
+        .eq('id', userId)
         .single();
 
-      if (criado) {
-        setPerfil(criado);
+      if (data) {
+        setPerfil(data);
+      } else if (error?.code === 'PGRST116') {
+        const { data: criado } = await supabase
+          .from('perfis')
+          .upsert({
+            id: userId,
+            email: userEmail,
+            nome: '',
+            plano: 'gratis',
+            creditos: 3,
+            onboarding_completed: false,
+          }, { onConflict: 'id' })
+          .select()
+          .single();
+
+        if (criado) {
+          setPerfil(criado);
+        }
       }
+    } catch {
+      // Silently fail during dev without Supabase
     }
-  }, []);
+  }, [isSupabaseConfigured]);
 
   useEffect(() => {
     if (isInitialLoadDone.current) return;
+
+    if (!isSupabaseConfigured) {
+      setLoading(false);
+      isInitialLoadDone.current = true;
+      return;
+    }
 
     const supabase = createClient();
     supabase.auth.getSession().then(async ({ data: { session } }) => {
@@ -99,9 +111,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchPerfil]);
+  }, [fetchPerfil, isSupabaseConfigured]);
 
   const signOut = async () => {
+    if (!isSupabaseConfigured) return;
     const supabase = createClient();
     await supabase.auth.signOut();
     setUser(null);

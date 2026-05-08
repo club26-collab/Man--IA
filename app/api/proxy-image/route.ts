@@ -8,16 +8,15 @@ export async function GET(req: NextRequest) {
     return new NextResponse('Missing prompt', { status: 400 });
   }
 
-  // Monta a URL da Pollinations internamente no backend (livre de adblockers do cliente)
-  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&model=flux`;
+  const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=720&height=900&nologo=true&model=flux`;
 
   try {
     const response = await fetch(pollinationsUrl, {
       method: 'GET',
       headers: {
-        // Envia um User-Agent para evitar bloqueios do Cloudflare
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      }
+      },
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
