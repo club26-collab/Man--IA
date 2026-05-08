@@ -79,7 +79,7 @@ export async function gerarReflexao() {
     if (!client) return { success: false, error: 'Configuração da IA incompleta' };
 
     const response = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: `Você é um Mentor Espiritual. Gere uma reflexão curta (máx 4 linhas) para começar o dia bem. Pode incluir um versículo curto se apropriado. Seja acolhedor e prático. Não use emojis. Responda APENAS com o texto da reflexão, sem introdução.`,
     });
 
@@ -157,7 +157,7 @@ REGRAS:
 4. A imagem NÃO deve conter rostos humanos detalhados.`;
 
     const response = await client.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: promptText,
     });
 
