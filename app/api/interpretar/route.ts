@@ -86,7 +86,7 @@ Responda em markdown com exatamente estas 3 seções:
 [Oração curta e pessoal para a pessoa fazer ao longo do dia.]`;
 
       const response = await client.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         contents: prompt,
       });
 

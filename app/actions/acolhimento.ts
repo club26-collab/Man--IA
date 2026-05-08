@@ -108,11 +108,8 @@ REGRAS:
 4. A imagem NÃO deve conter rostos humanos detalhados.`;
 
     const response = await client.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: promptText,
-      config: {
-        responseMimeType: 'application/json',
-      }
     });
 
     const jsonText = response.text;
