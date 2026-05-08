@@ -112,14 +112,14 @@ export default function SentimentInput({ perfil, onAcolher }: SentimentInputProp
               <button
                 key={a.id}
                 onClick={() => setAreaVida(areaVida === a.id ? null : a.id)}
-                className={`p-3 rounded-xl border transition-all text-center ${
+                className={`p-3 rounded-xl border transition-all text-center w-full overflow-hidden ${
                   areaVida === a.id
                     ? 'bg-teal-500/15 border-teal-500'
                     : 'bg-bg-input border-border-soft hover:border-teal-500/30'
                 }`}
               >
                 <span className="text-lg block">{a.icon}</span>
-                <span className="text-xs text-text-secondary">{a.label}</span>
+                <span className="text-xs text-text-secondary break-words leading-tight">{a.label}</span>
               </button>
             ))}
           </div>
