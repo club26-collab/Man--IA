@@ -26,7 +26,6 @@ export async function GET(request: Request) {
           nome: metadata.nome || '',
           plano: 'gratis',
           creditos: 3,
-          signo: metadata.signo || null,
           onboarding_completed: !!metadata.onboarding_completed,
         });
         
