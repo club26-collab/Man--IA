@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { Copy, Share2, BookOpen, Download, Printer, ImageDown, Loader2 } from 'lucide-react';
+import { Copy, Share2, BookOpen, Download, Printer, ImageDown, Loader2, RefreshCw, Heart, Sparkles } from 'lucide-react';
 import { jsPDF } from 'jspdf';
+import { regenerarImagem } from '@/app/actions/acolhimento';
 
 interface AcolhimentoDisplayProps {
   acolhimento: string;
@@ -12,6 +13,122 @@ interface AcolhimentoDisplayProps {
   sentimentoId: string | null;
   nome: string;
   onNovoAcolhimento: () => void;
+}
+
+interface Secao {
+  titulo: string;
+  icone: React.ReactNode;
+  cor: string;
+  corBg: string;
+  corBorda: string;
+  conteudo: string;
+}
+
+function parseSections(text: string, acolhimento: string): Secao[] {
+  const sections: Secao[] = [];
+  const lines = acolhimento.split('\n');
+  let currentSection: string[] = [];
+  let currentTitle = '';
+  let found = false;
+
+  for (const line of lines) {
+    const headerMatch = line.match(/^##?\s*(.+)/);
+    if (headerMatch) {
+      const header = headerMatch[1].toLowerCase();
+      if (header.includes('versiculo') || header.includes('palavra') || header.includes('📖')) {
+        if (found && currentTitle) {
+          sections.push(buildSecao(currentTitle, currentSection.join('\n').trim()));
+        }
+        currentTitle = 'Versículo para o Coração';
+        currentSection = [];
+        found = true;
+      } else if (header.includes('acolhimento') || header.includes('conforto') || header.includes('💛')) {
+        if (found && currentTitle) {
+          sections.push(buildSecao(currentTitle, currentSection.join('\n').trim()));
+        }
+        currentTitle = 'Palavra de Acolhimento';
+        currentSection = [];
+        found = true;
+      } else if (header.includes('oracao') || header.includes('pratica') || header.includes('🙏')) {
+        if (found && currentTitle) {
+          sections.push(buildSecao(currentTitle, currentSection.join('\n').trim()));
+        }
+        currentTitle = 'Oração para o Dia';
+        currentSection = [];
+        found = true;
+      } else if (found) {
+        currentSection.push(line);
+      }
+    } else if (found) {
+      currentSection.push(line);
+    }
+  }
+
+  if (currentTitle && currentSection.length > 0) {
+    sections.push(buildSecao(currentTitle, currentSection.join('\n').trim()));
+  }
+
+  if (sections.length === 0) {
+    return [{
+      titulo: 'Acolhimento',
+      icone: <Heart className="w-5 h-5" />,
+      cor: 'text-teal-600',
+      corBg: 'bg-teal-50',
+      corBorda: 'border-teal-200/50',
+      conteudo: cleanConteudo(acolhimento),
+    }];
+  }
+
+  return sections;
+}
+
+function buildSecao(title: string, rawContent: string): Secao {
+  const lower = title.toLowerCase();
+  if (lower.includes('versiculo')) {
+    return {
+      titulo: title,
+      icone: <BookOpen className="w-5 h-5" />,
+      cor: 'text-teal-600',
+      corBg: 'bg-teal-50',
+      corBorda: 'border-teal-200/50',
+      conteudo: cleanConteudo(rawContent),
+    };
+  }
+  if (lower.includes('acolhimento') || lower.includes('conforto')) {
+    return {
+      titulo: title,
+      icone: <Heart className="w-5 h-5" />,
+      cor: 'text-sage-600',
+      corBg: 'bg-sage-50',
+      corBorda: 'border-sage-200/50',
+      conteudo: cleanConteudo(rawContent),
+    };
+  }
+  if (lower.includes('oracao')) {
+    return {
+      titulo: title,
+      icone: <Sparkles className="w-5 h-5" />,
+      cor: 'text-amber-600',
+      corBg: 'bg-amber-50',
+      corBorda: 'border-amber-200/50',
+      conteudo: cleanConteudo(rawContent),
+    };
+  }
+  return {
+    titulo: title,
+    icone: <Heart className="w-5 h-5" />,
+    cor: 'text-teal-600',
+    corBg: 'bg-teal-50',
+    corBorda: 'border-teal-200/50',
+    conteudo: cleanConteudo(rawContent),
+  };
+}
+
+function cleanConteudo(text: string): string {
+  return text
+    .replace(/^##?\s*[^]*?\n/, '')
+    .replace(/^---+\s*/gm, '')
+    .trim();
 }
 
 export default function AcolhimentoDisplay({
@@ -24,6 +141,10 @@ export default function AcolhimentoDisplay({
   const [copied, setCopied] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = useState<string | null>(imageUrl ?? null);
+
+  const sections = parseSections(acolhimento, acolhimento);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(acolhimento);
@@ -47,9 +168,9 @@ export default function AcolhimentoDisplay({
   };
 
   const handleDownloadImage = async () => {
-    if (!imageUrl) return;
+    if (!currentImageUrl) return;
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(currentImageUrl);
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -60,7 +181,24 @@ export default function AcolhimentoDisplay({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch {
-      window.open(imageUrl, '_blank');
+      window.open(currentImageUrl, '_blank');
+    }
+  };
+
+  const handleRegenerarImagem = async () => {
+    if (!sentimentoId) return;
+    setRegenerating(true);
+    setImageLoaded(false);
+    setImageError(false);
+    try {
+      const result = await regenerarImagem(sentimentoId);
+      if (result.success && result.imageUrl) {
+        setCurrentImageUrl(result.imageUrl);
+      }
+    } catch {
+      setImageError(true);
+    } finally {
+      setRegenerating(false);
     }
   };
 
@@ -121,15 +259,16 @@ export default function AcolhimentoDisplay({
       return y + 20;
     };
 
-    const drawSectionTitle = (y: number, title: string, color: number[]) => {
-      doc.setDrawColor(45, 90, 97);
-      doc.setLineWidth(0.5);
-      doc.line(margin, y, margin + 8, y);
+    const drawSectionCard = (y: number, title: string, color: number[], bgColor: number[]) => {
+      const cardHeight = 10;
+      doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+      doc.setDrawColor(color[0], color[1], color[2]);
+      doc.roundedRect(margin, y, contentWidth, cardHeight, 2, 2, 'FD');
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(12);
+      doc.setFontSize(11);
       doc.setTextColor(color[0], color[1], color[2]);
-      doc.text(title, margin + 12, y);
-      return y + 7;
+      doc.text(title, margin + 6, y + 7);
+      return y + cardHeight + 4;
     };
 
     const addWrappedText = (text: string, y: number, fontSize: number, color: number[], font: string, lineHeight: number): number => {
@@ -160,9 +299,9 @@ export default function AcolhimentoDisplay({
     y = drawMeta(y);
     y += 6;
 
-    if (imageUrl) {
+    if (currentImageUrl) {
       try {
-        const response = await fetch(imageUrl);
+        const response = await fetch(currentImageUrl);
         const blob = await response.blob();
         const imgData = await new Promise<string>((resolve) => {
           const reader = new FileReader();
@@ -173,9 +312,7 @@ export default function AcolhimentoDisplay({
         const imgWidth = contentWidth;
         const imgHeight = imgWidth * (900 / 720);
         const maxImgHeight = pageHeight * 0.4;
-
-        let finalImgHeight = Math.min(imgHeight, maxImgHeight);
-        let finalImgWidth = imgWidth;
+        const finalImgHeight = Math.min(imgHeight, maxImgHeight);
 
         if (y + finalImgHeight > pageHeight - margin) {
           doc.addPage();
@@ -185,8 +322,8 @@ export default function AcolhimentoDisplay({
 
         doc.setDrawColor(45, 90, 97);
         doc.setLineWidth(0.3);
-        doc.roundedRect(margin, y, finalImgWidth, finalImgHeight, 3, 3, 'S');
-        doc.addImage(imgData, 'JPEG', margin + 0.5, y + 0.5, finalImgWidth - 1, finalImgHeight - 1);
+        doc.roundedRect(margin, y, imgWidth, finalImgHeight, 3, 3, 'S');
+        doc.addImage(imgData, 'JPEG', margin + 0.5, y + 0.5, imgWidth - 1, finalImgHeight - 1);
         y += finalImgHeight + 8;
       } catch {
         console.warn('Failed to add image to PDF');
@@ -194,47 +331,26 @@ export default function AcolhimentoDisplay({
     }
 
     const cleanText = cleanMarkdown(acolhimento);
-    const sections = cleanText.split(/\n\s*\n/);
-    let isFirst = true;
 
-    for (const section of sections) {
-      const lines = section.split('\n');
-      let title: string | null = null;
-      let body: string[] = [];
-
-      for (const line of lines) {
-        if (line.includes('Versiculo') || line.includes('Palavra')) {
-          title = 'Palavra do Senhor';
-        } else if (line.includes('Acolhimento') || line.includes('Conforto')) {
-          title = 'Acolhimento';
-        } else if (line.includes('Oracao') || line.includes('Oracão') || line.includes('Pratica')) {
-          title = 'Oração para o Dia';
-        } else if (line.startsWith('\u2022 ') || line.length > 5) {
-          body.push(line.replace(/^\u2022 /, ''));
-        }
-      }
-
-      if (!title) {
-        title = 'Acolhimento';
-        body = lines.filter(l => l.length > 5);
-      }
-
+    for (const secao of sections) {
       if (y > pageHeight - 40) {
         doc.addPage();
         drawBackground();
         y = margin + 10;
       }
 
-      if (!isFirst) y += 3;
-      y = drawSectionTitle(y, title, isFirst ? [184, 153, 30] : [45, 90, 97]);
-      isFirst = false;
+      const colors: Record<string, number[][]> = {
+        'text-teal-600': [[45, 90, 97], [234, 242, 241]],
+        'text-sage-600': [[178, 194, 177], [240, 245, 239]],
+        'text-amber-600': [[184, 153, 30], [251, 245, 230]],
+      };
+      const colorKey = secao.cor;
+      const [textColor, bgColor] = colors[colorKey] || [[45, 90, 97], [234, 242, 241]];
 
-      if (body.length > 0) {
-        const bodyText = body.join('\n\n');
-        y = addWrappedText(bodyText, y, 10, [90, 112, 117], 'normal', 5.5);
-      }
-
+      y = drawSectionCard(y, secao.titulo, textColor, bgColor);
       y += 2;
+      y = addWrappedText(secao.conteudo, y, 10, [90, 112, 117], 'normal', 5.5);
+      y += 4;
     }
 
     if (y > pageHeight - 25) {
@@ -297,15 +413,13 @@ export default function AcolhimentoDisplay({
             <div class="meta-item"><div class="meta-label">Nome</div><div class="meta-value">${nome}</div></div>
             <div class="meta-item"><div class="meta-label">Data</div><div class="meta-value">${new Date().toLocaleDateString('pt-BR')}</div></div>
           </div>
-          ${imageUrl ? `<div style="text-align: center; margin-bottom: 30px;"><img src="${imageUrl}" style="max-width: 100%; height: auto; border-radius: 16px; max-height: 400px;" /></div>` : ''}
+          ${currentImageUrl ? `<div style="text-align: center; margin-bottom: 30px;"><img src="${currentImageUrl}" style="max-width: 100%; height: auto; border-radius: 16px; max-height: 400px;" /></div>` : ''}
           <div class="content">${acolhimento.replace(/\n/g, '<br>')}</div>
         </body>
         </html>
       `);
       printWindow.document.close();
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
+      setTimeout(() => printWindow.print(), 500);
     }
   };
 
@@ -324,50 +438,30 @@ export default function AcolhimentoDisplay({
         </div>
 
         <div className="flex items-center gap-1 md:gap-2">
-          <button
-            onClick={handleCopy}
-            className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary"
-            title="Copiar"
-          >
-            {copied ? (
-              <span className="text-teal-600 text-xs">Copiado!</span>
-            ) : (
-              <Copy className="w-4 h-4" />
-            )}
+          <button onClick={handleCopy} className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary" title="Copiar">
+            {copied ? <span className="text-teal-600 text-xs">Copiado!</span> : <Copy className="w-4 h-4" />}
           </button>
-          <button
-            onClick={handleDownloadPDF}
-            className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary"
-            title="Baixar PDF"
-          >
+          <button onClick={handleDownloadPDF} className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary" title="Baixar PDF">
             <Download className="w-4 h-4" />
           </button>
-          <button
-            onClick={handlePrint}
-            className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary"
-            title="Imprimir"
-          >
+          <button onClick={handlePrint} className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary" title="Imprimir">
             <Printer className="w-4 h-4" />
           </button>
-          <button
-            onClick={handleShare}
-            className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary"
-            title="Compartilhar"
-          >
+          <button onClick={handleShare} className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary" title="Compartilhar">
             <Share2 className="w-4 h-4" />
           </button>
         </div>
       </div>
 
       {/* Imagem gerada pela IA */}
-      {imageUrl && (
+      {currentImageUrl && (
         <div className="relative w-full overflow-hidden bg-gradient-to-b from-teal-50 to-bg-primary">
-          {!imageLoaded && !imageError && (
+          {regenerating || (!imageLoaded && !imageError && (
             <div className="w-full aspect-[4/5] flex flex-col items-center justify-center gap-3 animate-pulse">
               <Loader2 className="w-8 h-8 text-teal-400 animate-spin" />
-              <span className="text-text-secondary text-sm">Gerando arte sacra...</span>
+              <span className="text-text-secondary text-sm">{regenerating ? 'Regenerando arte...' : 'Gerando arte sacra...'}</span>
             </div>
-          )}
+          ))}
           {imageError && (
             <div className="w-full aspect-[4/5] flex flex-col items-center justify-center gap-3 bg-black/5">
               <span className="text-3xl">🎨</span>
@@ -375,19 +469,19 @@ export default function AcolhimentoDisplay({
             </div>
           )}
           <img
-            src={imageUrl}
+            src={currentImageUrl}
             alt="Arte Sacra — Acolhimento Maná AI"
-            className={`w-full object-cover transition-opacity duration-700 ${imageLoaded ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
+            className={`w-full object-cover transition-opacity duration-700 ${imageLoaded && !regenerating ? 'opacity-100' : 'opacity-0 absolute inset-0'}`}
             style={{ aspectRatio: '4/5', maxHeight: '480px' }}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={() => { setImageLoaded(true); setImageError(false); }}
             onError={() => setImageError(true)}
             loading="lazy"
           />
-          {imageLoaded && (
+          {imageLoaded && !regenerating && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="absolute bottom-3 right-3 md:bottom-4 md:right-4"
+              className="absolute bottom-3 right-3 md:bottom-4 md:right-4 flex gap-2"
             >
               <button
                 onClick={handleDownloadImage}
@@ -395,17 +489,41 @@ export default function AcolhimentoDisplay({
                 title="Baixar Arte"
               >
                 <ImageDown className="w-3.5 h-3.5" />
-                Baixar Arte
+                Baixar
+              </button>
+              <button
+                onClick={handleRegenerarImagem}
+                disabled={regenerating}
+                className="flex items-center gap-1.5 bg-black/40 backdrop-blur-sm text-white text-xs px-3 py-1.5 rounded-full hover:bg-black/60 transition-colors disabled:opacity-50"
+                title="Nova Arte"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${regenerating ? 'animate-spin' : ''}`} />
+                Nova Arte
               </button>
             </motion.div>
           )}
         </div>
       )}
 
-      <div className="p-4 md:p-6 max-h-[500px] overflow-y-auto">
-        <div className="markdown-content">
-          <ReactMarkdown>{acolhimento}</ReactMarkdown>
-        </div>
+      {/* Seções do acolhimento em cards separados */}
+      <div className="p-4 md:p-6 space-y-4">
+        {sections.map((secao, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className={`${secao.corBg} ${secao.corBorda} border rounded-xl overflow-hidden`}
+          >
+            <div className={`flex items-center gap-2 px-4 py-3 border-b ${secao.corBorda}`}>
+              <span className={secao.cor}>{secao.icone}</span>
+              <h4 className={`font-semibold text-sm ${secao.cor}`}>{secao.titulo}</h4>
+            </div>
+            <div className="px-4 py-3 text-sm text-text-secondary leading-relaxed">
+              <ReactMarkdown>{secao.conteudo}</ReactMarkdown>
+            </div>
+          </motion.div>
+        ))}
       </div>
 
       <div className="px-4 md:px-6 py-4 border-t border-border-soft">

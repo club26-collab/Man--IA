@@ -40,6 +40,55 @@ const contextosAreaVida: Record<string, string> = {
 
 const IMAGE_BASE_STYLE = 'sacred minimalism, soft digital painting, divine filtered light, teal #2D5A61 and matte gold palette, organic ethereal brushstrokes, no human faces, focus on symbolism and atmosphere, subtle watermark text "Maná AI" in elegant small font at bottom right corner, mobile-optimized vertical composition 4:5 aspect ratio, contemplative mood';
 
+export async function regenerarImagem(sentimentoId: string) {
+  try {
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Não autorizado' };
+    if (!supabaseAdmin) return { success: false, error: 'Configuração do servidor incompleta' };
+
+    const { data: sentimento } = await supabaseAdmin
+      .from('sentimentos')
+      .select('image_prompt')
+      .eq('id', sentimentoId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (!sentimento?.image_prompt) {
+      return { success: false, error: 'Nenhum prompt de imagem salvo' };
+    }
+
+    const imagePrompt = sentimento.image_prompt.replace(/[^a-zA-Z0-9\s,.-]/g, '').replace(/\s+/g, ' ').trim();
+    const imageUrl = `/api/proxy-image?prompt=${encodeURIComponent(imagePrompt)}`;
+
+    await supabaseAdmin.from('sentimentos').update({ image_url: imageUrl }).eq('id', sentimentoId);
+
+    return { success: true, imageUrl };
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error('Erro ao regenerar imagem:', err.message);
+    return { success: false, error: 'Erro ao regenerar imagem' };
+  }
+}
+
+export async function gerarReflexao() {
+  try {
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Não autorizado' };
+    if (!client) return { success: false, error: 'Configuração da IA incompleta' };
+
+    const response = await client.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: `Você é um Mentor Espiritual. Gere uma reflexão curta (máx 4 linhas) para começar o dia bem. Pode incluir um versículo curto se apropriado. Seja acolhedor e prático. Não use emojis. Responda APENAS com o texto da reflexão, sem introdução.`,
+    });
+
+    return { success: true, reflexao: response.text || 'Que seu dia seja leve e abençoado.' };
+  } catch {
+    return { success: true, reflexao: 'Que seu dia seja leve e abençoado.' };
+  }
+}
+
 export async function gerarAcolhimento(formData: FormData) {
   try {
     const supabase = await createServerClient();

@@ -9,7 +9,8 @@ import SentimentInput from '@/components/SentimentInput';
 import AcolhimentoDisplay from '@/components/AcolhimentoDisplay';
 import QuickStats from '@/components/QuickStats';
 import PremiumUpgrade from '@/components/PremiumUpgrade';
-import { Sparkles, BookOpen } from 'lucide-react';
+import ReflexaoCard from '@/components/ReflexaoCard';
+import { Sparkles, BookOpen, Bell, BellOff } from 'lucide-react';
 import { gerarAcolhimento } from '@/app/actions/acolhimento';
 
 export default function DashboardPage() {
@@ -19,19 +20,17 @@ export default function DashboardPage() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [sentimentoId, setSentimentoId] = useState<string | null>(null);
   const [acolhendo, setAcolhendo] = useState(false);
+  const [notifAtiva, setNotifAtiva] = useState(false);
   const redirectedRef = useRef(false);
 
   useEffect(() => {
     if (redirectedRef.current) return;
-
     if (loading) return;
-
     if (!user) {
       redirectedRef.current = true;
       router.push('/auth');
       return;
     }
-
     if (perfil && !perfil.onboarding_completed) {
       redirectedRef.current = true;
       router.push('/onboarding');
@@ -69,6 +68,27 @@ export default function DashboardPage() {
     }
   }, [refreshPerfil]);
 
+  const ativarNotificacao = useCallback(() => {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') {
+      setNotifAtiva(true);
+      new Notification('☀️ Maná AI', {
+        body: 'Bom dia! Que tal começar o dia com um acolhimento?',
+        icon: '/favicon.ico',
+      });
+    } else if (Notification.permission !== 'denied') {
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          setNotifAtiva(true);
+          new Notification('☀️ Maná AI', {
+            body: 'Bom dia! Que tal começar o dia com um acolhimento?',
+            icon: '/favicon.ico',
+          });
+        }
+      });
+    }
+  }, []);
+
   if (loading || (user && !perfil)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -79,117 +99,133 @@ export default function DashboardPage() {
           >
             <Sparkles className="w-12 h-12 text-teal-400 animate-pulse mx-auto mb-4" />
           </motion.div>
-          <p className="text-text-secondary animate-pulse">
-            Carregando...
-          </p>
+          <p className="text-text-secondary animate-pulse">Carregando...</p>
         </div>
       </div>
     );
   }
 
-  if (!user || !perfil) {
-    return null;
-  }
+  if (!user || !perfil) return null;
 
   return (
     <div className="min-h-screen">
       <Header perfil={perfil} signOut={signOut} />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-        >
-          <QuickStats perfil={perfil} />
-        </motion.div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <div className="flex items-center justify-between mb-6">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex-1"
           >
-            <SentimentInput
-              perfil={perfil}
-              onAcolher={handleAcolher}
-            />
-
-            {perfil.plano === 'gratis' && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-8"
-              >
-                <PremiumUpgrade />
-              </motion.div>
-            )}
+            <QuickStats perfil={perfil} />
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={ativarNotificacao}
+            className={`ml-4 p-2.5 rounded-xl border transition-all flex-shrink-0 ${
+              notifAtiva
+                ? 'bg-teal-50 border-teal-200 text-teal-600'
+                : 'bg-white/50 border-border-soft text-text-secondary hover:bg-teal-50 hover:text-teal-600'
+            }`}
+            title={notifAtiva ? 'Notificação ativa' : 'Ativar lembrete diário'}
           >
-            <AnimatePresence mode="wait">
-              {acolhendo ? (
-                <motion.div
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
-                >
-                  <div className="text-center">
+            {notifAtiva ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+          </motion.button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <SentimentInput perfil={perfil} onAcolher={handleAcolher} />
+                {perfil.plano === 'gratis' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="mt-8"
+                  >
+                    <PremiumUpgrade />
+                  </motion.div>
+                )}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <AnimatePresence mode="wait">
+                  {acolhendo ? (
                     <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                      key="loading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
                     >
-                      <Sparkles className="w-16 h-16 text-teal-400 mx-auto mb-4" />
+                      <div className="text-center">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Sparkles className="w-16 h-16 text-teal-400 mx-auto mb-4" />
+                        </motion.div>
+                        <h3 className="text-xl font-semibold text-text-primary mb-2">Buscando Palavra para Você...</h3>
+                        <p className="text-text-secondary">O mentor espiritual está preparando seu acolhimento...</p>
+                      </div>
                     </motion.div>
-                    <h3 className="text-xl font-semibold text-text-primary mb-2">
-                      Buscando Palavra para Você...
-                    </h3>
-                    <p className="text-text-secondary">
-                      O mentor espiritual está preparando seu acolhimento...
-                    </p>
-                  </div>
-                </motion.div>
-              ) : acolhimento ? (
-                <motion.div
-                  key="result"
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                >
-                  <AcolhimentoDisplay
-                    acolhimento={acolhimento}
-                    imageUrl={imageUrl}
-                    sentimentoId={sentimentoId}
-                    nome={perfil.nome}
-                    onNovoAcolhimento={() => { setAcolhimento(null); setImageUrl(null); setSentimentoId(null); }}
-                  />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <BookOpen className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-text-primary mb-2">
-                      Seu Acolhimento Diário
-                    </h3>
-                    <p className="text-text-secondary max-w-xs mx-auto">
-                      Compartilhe como está se sentindo e receba uma palavra de conforto personalizada.
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  ) : acolhimento ? (
+                    <motion.div
+                      key="result"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                    >
+                      <AcolhimentoDisplay
+                        acolhimento={acolhimento}
+                        imageUrl={imageUrl}
+                        sentimentoId={sentimentoId}
+                        nome={perfil.nome}
+                        onNovoAcolhimento={() => { setAcolhimento(null); setImageUrl(null); setSentimentoId(null); }}
+                      />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="empty"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-8 min-h-[400px] flex items-center justify-center"
+                    >
+                      <div className="text-center">
+                        <BookOpen className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-text-primary mb-2">Seu Acolhimento Diário</h3>
+                        <p className="text-text-secondary max-w-xs mx-auto">
+                          Compartilhe como está se sentindo e receba uma palavra de conforto personalizada.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="space-y-4"
+          >
+            <ReflexaoCard />
           </motion.div>
         </div>
       </main>

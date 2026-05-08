@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/browser';
 import { useAuth } from '@/components/AuthProvider';
 import Header from '@/components/Header';
 import { Sentimento } from '@/lib/types';
-import { History, Clock, Heart, BookOpen, FileDown } from 'lucide-react';
+import { History, Heart, BookOpen, FileDown, Clock, Sparkles } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
 const sentimentoLabels: Record<string, { label: string; color: string }> = {
@@ -27,14 +27,14 @@ const sentimentoLabels: Record<string, { label: string; color: string }> = {
 };
 
 const areaLabels: Record<string, string> = {
-  familia: '👨‍👩‍👧‍👦 Família',
-  trabalho: '💼 Trabalho',
-  saude: '🏥 Saúde',
-  relacionamento: '❤️ Relacionamento',
-  espiritualidade: '✝️ Espiritual',
-  financeiro: '💰 Financeiro',
-  pessoal: '🧘 Pessoal',
-  outro: '🌟 Outro',
+  familia: 'Família',
+  trabalho: 'Trabalho',
+  saude: 'Saúde',
+  relacionamento: 'Relacionamento',
+  espiritualidade: 'Espiritual',
+  financeiro: 'Financeiro',
+  pessoal: 'Pessoal',
+  outro: 'Outro',
 };
 
 export default function HistoricoPage() {
@@ -57,10 +57,7 @@ export default function HistoricoPage() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchSentimentos();
-    }
+    if (user) fetchSentimentos();
   }, [user, fetchSentimentos]);
 
   useEffect(() => {
@@ -75,43 +72,28 @@ export default function HistoricoPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    printWindow.document.write(`
-<!DOCTYPE html>
-<html>
-<head>
-<title>Acolhimento - Mana AI</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; color: #1a2e33; background: #F9F7F2; }
-  .header { text-align: center; padding-bottom: 20px; border-bottom: 2px solid #2D5A61; margin-bottom: 30px; }
-  .logo { font-size: 24px; font-weight: 700; color: #2D5A61; }
-  .date { color: #5a7075; font-size: 14px; margin-top: 5px; }
-  .sentimento-box { background: white; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid rgba(45,90,97,0.1); }
-  .sentimento-label { font-size: 12px; color: #5a7075; margin-bottom: 8px; }
-  .sentimento-text { line-height: 1.6; color: #1a2e33; }
-  h2 { color: #2D5A61; font-size: 18px; margin: 24px 0 12px 0; }
-  p { line-height: 1.8; margin-bottom: 12px; color: #5a7075; }
-  strong { color: #1a2e33; }
-  .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #999; font-size: 12px; }
-</style>
-</head>
-<body>
-  <div class="header">
-    <div class="logo">✦ Mana AI</div>
-    <div class="date">${formatDate(sentimento.created_at)}</div>
-  </div>
-  <div class="sentimento-box">
-    <div class="sentimento-label">Como você se sentia:</div>
-    <div class="sentimento-text">${sentimento.descricao}</div>
-  </div>
-  <div class="content">${sentimento.acolhimento || '<p>Sem acolhimento disponível.</p>'}</div>
-  <div class="footer">
-    <p>Gerado por Mana AI • ${new Date().toLocaleDateString('pt-BR')}</p>
-  </div>
-  <script>window.print();</script>
-</body>
-</html>
-    `);
+    printWindow.document.write(`<!DOCTYPE html>
+<html><head><title>Acolhimento - Mana AI</title><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,system-ui,sans-serif;padding:40px;max-width:700px;margin:0 auto;color:#1a2e33;background:#F9F7F2}
+.header{text-align:center;padding-bottom:20px;border-bottom:2px solid #2D5A61;margin-bottom:30px}
+.logo{font-size:24px;font-weight:700;color:#2D5A61}
+.date{color:#5a7075;font-size:14px;margin-top:5px}
+.sentimento-box{background:white;padding:20px;border-radius:12px;margin:20px 0;border:1px solid rgba(45,90,97,0.1)}
+.sentimento-label{font-size:12px;color:#5a7075;margin-bottom:8px}
+.sentimento-text{line-height:1.6;color:#1a2e33}
+h2{color:#2D5A61;font-size:18px;margin:24px 0 12px 0}
+p{line-height:1.8;margin-bottom:12px;color:#5a7075}
+strong{color:#1a2e33}
+.footer{text-align:center;margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#999;font-size:12px}
+</style></head><body>
+<div class="header"><div class="logo">&#10022; Mana AI</div><div class="date">${formatDate(sentimento.created_at)}</div></div>
+<div class="sentimento-box"><div class="sentimento-label">Como voce se sentia:</div><div class="sentimento-text">${sentimento.descricao}</div></div>
+${sentimento.image_url ? `<div style="text-align:center;margin-bottom:20px"><img src="${sentimento.image_url}" style="max-width:100%;border-radius:12px;max-height:300px" /></div>` : ''}
+<div class="content">${sentimento.acolhimento || '<p>Sem acolhimento disponivel.</p>'}</div>
+<div class="footer"><p>Gerado por Mana AI &bull; ${new Date().toLocaleDateString('pt-BR')}</p></div>
+<script>window.print()</script>
+</body></html>`);
     printWindow.document.close();
   };
 
@@ -125,42 +107,76 @@ export default function HistoricoPage() {
     });
   };
 
+  const formatDateShort = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+    });
+  };
+
+  const groupByDate = (items: Sentimento[]): Record<string, Sentimento[]> => {
+    const groups: Record<string, Sentimento[]> = {};
+    for (const item of items) {
+      const dateKey = new Date(item.created_at).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+      });
+      if (!groups[dateKey]) groups[dateKey] = [];
+      groups[dateKey].push(item);
+    }
+    return groups;
+  };
+
+  const extractPreview = (text: string): string => {
+    if (!text) return '';
+    const clean = text.replace(/##?\s*[^\n]*/g, '').replace(/\*\*/g, '').trim();
+    return clean.substring(0, 120) + (clean.length > 120 ? '...' : '');
+  };
+
   if (loading || !perfil) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-        >
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}>
           <BookOpen className="w-12 h-12 text-teal-400 animate-pulse" />
         </motion.div>
       </div>
     );
   }
 
+  const grouped = groupByDate(sentimentos);
+  const dateKeys = Object.keys(grouped);
+
   return (
     <div className="min-h-screen">
       <Header perfil={perfil} signOut={signOut} />
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-3 mb-8"
         >
           <History className="w-7 h-7 text-teal-500" />
-          <h1 className="text-2xl font-bold text-text-primary">Histórico de Acolhimentos</h1>
+          <h1 className="text-2xl font-bold text-text-primary">Histórico</h1>
           <span className="text-sm text-text-secondary bg-black/5 px-3 py-1 rounded-full">
-            {sentimentos.length} {sentimentos.length === 1 ? 'acolhimento' : 'acolhimentos'}
+            {sentimentos.length} {sentimentos.length === 1 ? 'registro' : 'registros'}
           </span>
         </motion.div>
 
         {loadingSentimentos ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-black/5 rounded-xl p-6 animate-pulse">
-                <div className="h-4 bg-black/10 rounded w-3/4 mb-4" />
-                <div className="h-3 bg-black/10 rounded w-1/2" />
+              <div key={i} className="flex gap-4 animate-pulse">
+                <div className="flex flex-col items-center">
+                  <div className="w-3 h-3 bg-teal-300 rounded-full" />
+                  <div className="w-0.5 flex-1 bg-teal-100" />
+                </div>
+                <div className="flex-1 bg-black/5 rounded-xl p-4">
+                  <div className="h-4 bg-black/10 rounded w-1/3 mb-3" />
+                  <div className="h-3 bg-black/10 rounded w-full mb-2" />
+                  <div className="h-3 bg-black/10 rounded w-2/3" />
+                </div>
               </div>
             ))}
           </div>
@@ -171,78 +187,92 @@ export default function HistoricoPage() {
             className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl p-12 text-center"
           >
             <BookOpen className="w-16 h-16 text-teal-400/50 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-text-primary mb-2">
-              Nenhum acolhimento registrado
-            </h3>
-            <p className="text-text-secondary">
-              Comece compartilhando seus sentimentos no Dashboard.
-            </p>
+            <h3 className="text-xl font-semibold text-text-primary mb-2">Nenhum acolhimento registrado</h3>
+            <p className="text-text-secondary">Comece compartilhando seus sentimentos no Dashboard.</p>
           </motion.div>
         ) : (
-          <div className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-2xl overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border-soft">
-                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Data</th>
-                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Sentimento</th>
-                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Sentimento</th>
-                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Área</th>
-                    <th className="text-left px-6 py-4 text-sm text-text-secondary font-medium">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sentimentos.map((sentimento, index) => (
-                    <motion.tr
-                      key={sentimento.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="border-b border-border-soft/50 hover:bg-black/5 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-text-secondary">
-                          <Clock className="w-4 h-4" />
-                          <span className="text-sm">{formatDate(sentimento.created_at)}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-text-primary text-sm truncate max-w-[200px]">
-                          {sentimento.descricao.substring(0, 60)}...
-                        </p>
-                      </td>
-                      <td className="px-6 py-4">
-                        {sentimento.sentimento && sentimentoLabels[sentimento.sentimento] ? (
-                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${sentimentoLabels[sentimento.sentimento].color}`}>
-                            <Heart className="w-3 h-3 mr-1" />
-                            {sentimentoLabels[sentimento.sentimento].label}
-                          </span>
-                        ) : (
-                          <span className="text-text-secondary text-sm">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-text-secondary">
-                          {sentimento.area_vida ? areaLabels[sentimento.area_vida] : '-'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <button
+          <div className="relative">
+            {/* Linha vertical da timeline */}
+            <div className="absolute left-[7px] top-0 bottom-0 w-0.5 bg-gradient-to-b from-teal-300 via-teal-200 to-teal-100" />
+
+            <div className="space-y-8">
+              {dateKeys.map((dateKey, dateIdx) => (
+                <motion.div
+                  key={dateKey}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: dateIdx * 0.05 }}
+                >
+                  {/* Cabeçalho da data */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-[18px] h-[18px] rounded-full bg-teal-500 border-4 border-teal-100 flex-shrink-0 z-10" />
+                    <span className="text-sm font-semibold text-text-primary">{dateKey}</span>
+                  </div>
+
+                  {/* Cards do dia */}
+                  <div className="ml-9 space-y-3">
+                    {grouped[dateKey].map((sentimento, cardIdx) => {
+                      const label = sentimento.sentimento ? sentimentoLabels[sentimento.sentimento] : null;
+                      return (
+                        <motion.div
+                          key={sentimento.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: cardIdx * 0.03 }}
                           onClick={() => setSelectedSentimento(sentimento)}
-                          className="flex items-center gap-2 text-teal-500 hover:text-teal-600 transition-colors"
+                          className="bg-gradient-card backdrop-blur-sm border border-border-soft rounded-xl p-4 hover:shadow-md transition-all cursor-pointer group"
                         >
-                          <BookOpen className="w-4 h-4" />
-                          <span className="text-sm">Ver</span>
-                        </button>
-                      </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Clock className="w-3.5 h-3.5 text-text-secondary flex-shrink-0" />
+                                <span className="text-xs text-text-secondary">
+                                  {formatDateShort(sentimento.created_at)}
+                                </span>
+                                {label && (
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs border ${label.color}`}>
+                                    <Heart className="w-2.5 h-2.5 mr-1" />
+                                    {label.label}
+                                  </span>
+                                )}
+                                {sentimento.area_vida && areaLabels[sentimento.area_vida] && (
+                                  <span className="text-xs text-text-secondary bg-black/5 px-2 py-0.5 rounded-full">
+                                    {areaLabels[sentimento.area_vida]}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
+                                {extractPreview(sentimento.acolhimento || '')}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <div className="flex gap-1.5">
+                                {sentimento.image_url && (
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-border-soft flex-shrink-0">
+                                    <img src={sentimento.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                  </div>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handlePrintSentimento(sentimento); }}
+                                className="p-2 rounded-lg hover:bg-black/5 transition-colors text-text-secondary hover:text-text-primary opacity-0 group-hover:opacity-100"
+                                title="Imprimir"
+                              >
+                                <FileDown className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         )}
 
+        {/* Modal do acolhimento */}
         {selectedSentimento && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -258,12 +288,8 @@ export default function HistoricoPage() {
             >
               <div className="bg-teal-50 px-6 py-4 border-b border-border-soft flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-text-primary">
-                    Acolhimento
-                  </h3>
-                  <p className="text-xs text-text-secondary">
-                    {formatDate(selectedSentimento.created_at)}
-                  </p>
+                  <h3 className="text-lg font-semibold text-text-primary">Acolhimento</h3>
+                  <p className="text-xs text-text-secondary">{formatDate(selectedSentimento.created_at)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -299,7 +325,7 @@ export default function HistoricoPage() {
                   <p className="text-text-primary">{selectedSentimento.descricao}</p>
                 </div>
 
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-4 flex-wrap">
                   {selectedSentimento.sentimento && sentimentoLabels[selectedSentimento.sentimento] && (
                     <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs border ${sentimentoLabels[selectedSentimento.sentimento].color}`}>
                       {sentimentoLabels[selectedSentimento.sentimento].label}
